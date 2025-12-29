@@ -1,0 +1,15 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Mac
+.DS_Store
+
+# Downloads / media (按你项目实际目录名调整)
+downloads/
+output/
+*.mp4
+*.m4a
+*.mp3
+*.wav
