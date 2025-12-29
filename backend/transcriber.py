@@ -1,4 +1,4 @@
-#backend/transcriber.py
+# backend/transcriber.py
 """
 音频转写模块
 支持：分段输出、时间戳、多种输出格式

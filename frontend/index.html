@@ -3,208 +3,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>B站视频下载与AI总结工具</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>B站视频工具箱</title>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>🎬 B站视频下载与AI总结工具</h1>
+    <div class="app-container">
+        <!-- 顶部导航栏 -->
+        <header class="top-header">
+            <div class="header-left">
+                <span class="logo-icon">🎬</span>
+                <h1 class="logo-text">B站视频工具箱</h1>
+            </div>
+            <div class="header-center">
+                <div class="batch-mode-toggle">
+                    <span class="toggle-label">批量选择</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="batch-mode-switch">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="selected-count" id="selected-count">已选 0 个</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <!-- 批量操作按钮 -->
+                <div class="batch-actions" id="batch-actions">
+                    <button class="btn btn-secondary" id="batch-download-btn" title="批量下载">
+                        📥 下载
+                    </button>
+                    <button class="btn btn-secondary" id="batch-transcribe-btn" title="批量转写">
+                        🎤 转写
+                    </button>
+                    <button class="btn btn-secondary" id="batch-summary-btn" title="批量总结">
+                        🤖 总结
+                    </button>
+                </div>
+                <!-- 搜索按钮 -->
+                <button class="icon-btn" id="search-toggle-btn" title="搜索视频">
+                    🔍
+                </button>
+                <!-- 设置按钮 -->
+                <button class="icon-btn" id="settings-toggle-btn" title="设置">
+                    ⚙️
+                </button>
+            </div>
+        </header>
 
-        <!-- 已下载内容 -->
-        <div class="card">
-            <h2>
-                <span>📂 已下载内容</span>
-                <button class="refresh-btn" id="refreshBtn">🔄 刷新</button>
-            </h2>
-            <div id="downloadList" class="download-list">
-                <div class="empty-state">
-                    <div class="empty-state-icon">📭</div>
-                    <p>正在加载...</p>
+        <!-- 搜索面板（右侧滑出） -->
+        <div class="slide-panel" id="search-panel">
+            <div class="panel-header">
+                <h2>🔍 视频搜索</h2>
+                <button class="panel-close-btn" id="search-panel-close">&times;</button>
+            </div>
+            <div class="panel-content">
+                <!-- 关键词设置 -->
+                <div class="form-group">
+                    <label>上传关键词文件 (Excel)</label>
+                    <div class="file-upload" id="keyword-upload">
+                        <input type="file" id="keyword-file" accept=".xlsx,.xls" hidden>
+                        <span class="upload-icon">📁</span>
+                        <span class="upload-text">点击上传</span>
+                    </div>
+                    <p id="file-name" class="file-info hidden"></p>
+                </div>
+
+                <div class="form-group">
+                    <label>手动添加关键词</label>
+                    <div class="keyword-input-wrapper">
+                        <input type="text" id="new-keyword" placeholder="输入关键词按回车">
+                        <button class="btn btn-secondary btn-small" id="add-keyword-btn">+</button>
+                    </div>
+                    <div id="keywords-container" class="keywords-list">
+                        <span class="empty-hint">暂无关键词</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>爬取页数</label>
+                    <input type="number" id="pages-to-crawl" value="3" min="1" max="20">
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group-vertical">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="enable-detailed-info" checked>
+                            获取详细信息
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="remove-duplicates" checked>
+                            自动去重
+                        </label>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-block" id="start-crawl">
+                    🚀 开始搜索
+                </button>
+
+                <!-- 搜索进度 -->
+                <div class="search-progress hidden" id="search-progress">
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="crawl-progress-bar"></div>
+                        </div>
+                        <span class="progress-text" id="crawl-progress-text">0%</span>
+                    </div>
+                    <p class="progress-status" id="crawl-status">准备中...</p>
+                    <div class="progress-actions">
+                        <button class="btn btn-secondary btn-small" id="pause-crawl">暂停</button>
+                        <button class="btn btn-secondary btn-small hidden" id="resume-crawl">继续</button>
+                        <button class="btn btn-danger btn-small" id="stop-crawl">停止</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 下载设置 -->
-        <div class="card">
-            <h2>📥 新建下载</h2>
-            <div class="form-group">
-                <label>BV号列表（每行一个，支持完整URL或纯BV号）</label>
-                <textarea id="bvidInput" placeholder="BV1nPq2BoEf3&#10;https://www.bilibili.com/video/BV1xx411c7mD&#10;BV1es411B7qg"></textarea>
+        <!-- 设置面板（右侧滑出） -->
+        <div class="slide-panel" id="settings-panel">
+            <div class="panel-header">
+                <h2>⚙️ 设置</h2>
+                <button class="panel-close-btn" id="settings-panel-close">&times;</button>
             </div>
-            <div class="form-group">
-                <label>下载类型</label>
-                <div class="checkbox-group">
-                    <label class="checkbox-item">
-                        <input type="checkbox" id="typeAudio" value="audio">
-                        🎵 纯音频 (M4A)
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" id="typeVideoOnly" value="video_only">
-                        🎥 纯视频 (无声)
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" id="typeMerged" value="merged" checked>
-                        📹 合成视频 (音频+视频)
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" id="typeDanmaku" value="danmaku">
-                        💬 弹幕 (XML)
-                    </label>
-                </div>
-            </div>
-            <div class="btn-group">
-                <button class="btn btn-primary" id="startDownloadBtn">🚀 开始下载</button>
-                <button class="btn btn-secondary" id="clearTasksBtn">🗑️ 清空任务</button>
-            </div>
-
-            <div class="task-list" id="taskList"></div>
-        </div>
-
-        <!-- API设置 -->
-        <div class="card">
-            <h2>⚙️ API 设置</h2>
-            <div class="api-settings">
+            <div class="panel-content">
+                <h3>API 设置</h3>
                 <div class="form-group">
                     <label>Base URL</label>
-                    <input type="text" id="baseUrl" value="https://api.openai.com/v1" placeholder="https://api.openai.com/v1">
+                    <input type="text" id="api-base-url" value="https://api.openai.com/v1">
                 </div>
                 <div class="form-group">
                     <label>API Key</label>
-                    <input type="password" id="apiKey" placeholder="sk-xxx...">
+                    <input type="password" id="api-key" placeholder="sk-xxx...">
                 </div>
                 <div class="form-group">
                     <label>模型</label>
-                    <input type="text" id="modelName" value="gpt-3.5-turbo" placeholder="gpt-3.5-turbo">
+                    <input type="text" id="api-model" value="gpt-3.5-turbo">
                 </div>
-            </div>
-            <div class="form-group">
-                <label>总结 Prompt</label>
-                <textarea id="summaryPrompt" rows="3">请对以下视频内容进行总结，提取主要观点和关键信息，用中文回答：</textarea>
+                <div class="form-group">
+                    <label>总结提示词</label>
+                    <textarea id="summary-prompt" rows="4">请对以下视频内容进行总结，提取主要观点和关键信息，用中文回答：</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="include-timestamps">
+                        总结时包含时间戳
+                    </label>
+                </div>
+
+                <hr>
+
+                <h3>下载设置</h3>
+                <div class="form-group">
+                    <label>默认下载类型</label>
+                    <div class="checkbox-group-vertical">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="default-type-audio" value="audio" checked>
+                            🎵 纯音频 (M4A)
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="default-type-merged" value="merged">
+                            📹 合成视频
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="default-type-danmaku" value="danmaku">
+                            💬 弹幕
+                        </label>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h3>数据管理</h3>
+                <button class="btn btn-secondary btn-block" id="export-data-btn">
+                    📤 导出搜索结果 (Excel)
+                </button>
+                <button class="btn btn-secondary btn-block" id="clear-all-btn" style="margin-top: 8px;">
+                    🗑️ 清空所有数据
+                </button>
             </div>
         </div>
 
-        <!-- 转录与总结 -->
-        <div class="card">
-            <h2>📝 转录与总结</h2>
-            <div class="form-group">
-                <label>选择要处理的BV号（可从上方已下载列表点击选择）</label>
-                <input type="text" id="processBvid" placeholder="输入BV号，如：BV1nPq2BoEf3">
+        <!-- 遮罩层 -->
+        <div class="overlay hidden" id="overlay"></div>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 空状态 -->
+            <div class="empty-state" id="empty-state">
+                <div class="empty-icon">📭</div>
+                <h2>暂无视频数据</h2>
+                <p>点击右上角 🔍 按钮搜索B站视频</p>
             </div>
 
-            <!-- 转写格式选择 -->
-            <div class="format-options">
-                <div class="format-options-title">📄 输出格式（可多选）</div>
-                <div class="format-checkboxes">
-                    <label class="format-checkbox">
-                        <input type="checkbox" id="formatTxt" value="txt" checked disabled>
-                        <span>纯文本 (.txt)</span>
-                        <span class="format-desc">默认</span>
-                    </label>
-                    <label class="format-checkbox">
-                        <input type="checkbox" id="formatTimestamped" value="timestamped">
-                        <span>时间戳文本 (_timestamped.txt)</span>
-                    </label>
-                    <label class="format-checkbox">
-                        <input type="checkbox" id="formatSrt" value="srt">
-                        <span>SRT字幕 (.srt)</span>
-                    </label>
-                    <label class="format-checkbox">
-                        <input type="checkbox" id="formatVtt" value="vtt">
-                        <span>VTT字幕 (.vtt)</span>
-                    </label>
-                    <label class="format-checkbox">
-                        <input type="checkbox" id="formatJson" value="json">
-                        <span>JSON数据 (.json)</span>
-                    </label>
+            <!-- 视频卡片列表 -->
+            <div class="video-list" id="video-list"></div>
+
+            <!-- 加载更多 -->
+            <div class="load-more hidden" id="load-more">
+                <button class="btn btn-secondary" id="load-more-btn">加载更多</button>
+                <span class="load-info" id="load-info"></span>
+            </div>
+        </main>
+
+        <!-- 视频详情模态框 -->
+        <div class="modal hidden" id="video-detail-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="detail-title">视频详情</h2>
+                    <button class="modal-close-btn" id="detail-modal-close">&times;</button>
+                </div>
+                <div class="modal-body" id="detail-body">
+                    <!-- 动态填充 -->
                 </div>
             </div>
+        </div>
 
-            <div class="btn-group">
-                <button class="btn btn-primary" id="transcribeBtn">
-                    🎤 音频转文本 (Whisper)
-                </button>
-                <button class="btn btn-success" id="summarizeBtn">
-                    🤖 AI总结
-                </button>
-            </div>
-
-            <!-- 总结选项 -->
-            <div class="summary-options">
-                <label>
-                    <input type="checkbox" id="includeTimestamps">
-                    <span>📍 总结时包含时间戳信息</span>
-                </label>
-                <span class="summary-hint">（启用后AI可能会在总结中引用具体时间点）</span>
-            </div>
-
-            <p class="info-text">💡 首次转写需要加载模型，约需1-2分钟。纯文本(.txt)为默认输出，其他格式可选。</p>
-
-            <!-- 转写进度 -->
-            <div id="transcribeProgress" class="transcribe-progress hidden">
-                <h4>🎤 转写进度</h4>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="transcribeProgressBar" style="width: 0%"></div>
+        <!-- 下载选项模态框 -->
+        <div class="modal hidden" id="download-modal">
+            <div class="modal-content modal-small">
+                <div class="modal-header">
+                    <h2>选择下载类型</h2>
+                    <button class="modal-close-btn" id="download-modal-close">&times;</button>
                 </div>
-                <p class="task-message" id="transcribeMessage">准备中...</p>
-            </div>
-
-            <!-- 转录结果 -->
-            <div id="transcriptResult" class="result-box hidden">
-                <h3>
-                    <span>📄 转录结果</span>
-                    <div class="format-tabs" id="formatTabs">
-                        <button class="format-tab active" data-format="plain">纯文本</button>
-                        <button class="format-tab" data-format="timestamped">时间戳文本</button>
-                        <button class="format-tab" data-format="segments">分段视图</button>
-                        <button class="format-tab" data-format="srt">SRT字幕</button>
+                <div class="modal-body">
+                    <div class="checkbox-group-vertical">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="dl-type-audio" value="audio" checked>
+                            🎵 纯音频 (M4A)
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="dl-type-video" value="video_only">
+                            🎥 纯视频 (无声)
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="dl-type-merged" value="merged">
+                            📹 合成视频
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="dl-type-danmaku" value="danmaku">
+                            💬 弹幕
+                        </label>
                     </div>
-                </h3>
-
-                <!-- 统计信息 -->
-                <div class="transcript-stats" id="transcriptStats">
-                    <div class="stat-item">
-                        <span class="stat-label">时长:</span>
-                        <span class="stat-value" id="statDuration">-</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">片段数:</span>
-                        <span class="stat-value" id="statSegments">-</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">字数:</span>
-                        <span class="stat-value" id="statChars">-</span>
-                    </div>
-                    <div class="stat-item">
-                        <button class="copy-btn" id="copyBtn">📋 复制</button>
-                    </div>
-                </div>
-
-                <div class="result-content">
-                    <div id="viewPlain">
-                        <pre id="transcriptText"></pre>
-                    </div>
-                    <div id="viewTimestamped" class="hidden">
-                        <pre id="transcriptTimestamped"></pre>
-                    </div>
-                    <div id="viewSegments" class="hidden">
-                        <div id="transcriptSegments"></div>
-                    </div>
-                    <div id="viewSrt" class="hidden">
-                        <pre id="transcriptSrt"></pre>
+                    <div class="modal-actions">
+                        <button class="btn btn-primary btn-block" id="confirm-download-btn">开始下载</button>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- AI总结结果 -->
-            <div id="summaryResult" class="result-box hidden">
-                <h3>🤖 AI总结</h3>
-                <div class="result-content">
-                    <pre id="summaryText"></pre>
-                </div>
+        <!-- 任务进度浮窗 -->
+        <div class="task-float hidden" id="task-float">
+            <div class="task-float-header">
+                <span>📥 任务进度</span>
+                <button class="task-float-toggle" id="task-float-toggle">−</button>
+            </div>
+            <div class="task-float-body" id="task-float-body">
+                <!-- 动态填充任务 -->
             </div>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <!-- 通知提示 -->
+    <div id="notification" class="notification hidden">
+        <span id="notification-icon"></span>
+        <span id="notification-message"></span>
+    </div>
+
+    <script src="js/app.js"></script>
 </body>
 </html>
+
+
+
